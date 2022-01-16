@@ -4,25 +4,25 @@ use async_recursion::async_recursion;
 use reqwest::{self, header::HeaderMap, Error};
 
 use response_models::Token;
+
+use crate::response_models::ProductResponse;
 mod response_models;
 
 #[tokio::main]
 async fn main() {
-    let response = get_token().await;
-    let token = match response {
-        Ok(res) => res,
-        Err(_) => panic!("Something went wrong with getting the token :("),
-    };
-
-    println!("{:?}", token);
-    // print!("Enter kide.app product url: ");
-    // std::io::stdout().flush().unwrap();
-    // let mut product_id = String::new();
-    // std::io::stdin().read_line(&mut product_id).unwrap();
-    // get_product(product_id).await;
+    // let response = get_token().await;
+    // let token = match response {
+    //     Ok(res) => res,
+    //     Err(_) => panic!("Something went wrong with getting the token :("),
+    // };
+    get_product().await;
 }
 
-async fn get_product(product_id: String) {
+async fn get_product() {
+    print!("Enter kide.app product url: ");
+    std::io::stdout().flush().unwrap();
+    let mut product_id = String::new();
+    std::io::stdin().read_line(&mut product_id).unwrap();
     let client = reqwest::Client::new();
     let product_url = format!("https://api.kide.app/api/products/{}", product_id);
     let result = client
@@ -30,7 +30,7 @@ async fn get_product(product_id: String) {
         .send()
         .await
         .unwrap()
-        .text()
+        .json::<ProductResponse>()
         .await;
     println!("{:?}", result);
 }
