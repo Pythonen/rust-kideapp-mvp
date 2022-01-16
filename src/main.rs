@@ -18,7 +18,11 @@ async fn main() {
     get_product().await;
 }
 
-async fn get_product() {
+// async fn reserve_product(){
+
+// }
+
+async fn get_product() -> Option<ProductResponse> {
     print!("Enter kide.app product url: ");
     std::io::stdout().flush().unwrap();
     let mut product_id = String::new();
@@ -32,7 +36,16 @@ async fn get_product() {
         .unwrap()
         .json::<ProductResponse>()
         .await;
-    println!("{:?}", result);
+    match result {
+        Ok(res) => {
+            if res.model.variants.len() == 0 {
+                println!("Sales probably haven't started yet");
+                return None;
+            }
+            return Some(res);
+        }
+        Err(_) => return None,
+    }
 }
 
 fn get_creds() -> (String, String) {
