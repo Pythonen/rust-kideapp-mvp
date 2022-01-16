@@ -1,6 +1,7 @@
 use std::io::Write;
 
 use async_recursion::async_recursion;
+use chrono::{DateTime, Utc};
 use reqwest::{self, header::HeaderMap, Error};
 
 use response_models::Token;
@@ -15,18 +16,42 @@ async fn main() {
     //     Ok(res) => res,
     //     Err(_) => panic!("Something went wrong with getting the token :("),
     // };
-    get_product().await;
+    print!("Enter kide.app product url: ");
+    std::io::stdout().flush().unwrap();
+    let mut product_id = String::new();
+    std::io::stdin().read_line(&mut product_id).unwrap();
+    let time_to_sale = check_time(product_id).await;
+    println!("{:?}", time_to_sale);
+    // let product_response = match get_product().await {
+    //     Some(res) => {
+
+    //     }
+    //     None => {}
+    // }
+}
+
+async fn check_time(product_id: String) -> String {
+    let client = reqwest::Client::new();
+    let product_url = format!("https://api.kide.app/api/products/{}", product_id);
+    let result = client
+        .get(product_url.as_str())
+        .send()
+        .await
+        .unwrap()
+        .json::<ProductResponse>()
+        .await;
+    let response = match result {
+        Ok(res) => res,
+        Err(_) => panic!(),
+    };
+    return response.model.product.date_sales_from;
 }
 
 // async fn reserve_product(){
 
 // }
 
-async fn get_product() -> Option<ProductResponse> {
-    print!("Enter kide.app product url: ");
-    std::io::stdout().flush().unwrap();
-    let mut product_id = String::new();
-    std::io::stdin().read_line(&mut product_id).unwrap();
+async fn get_product(product_id: String) -> Option<ProductResponse> {
     let client = reqwest::Client::new();
     let product_url = format!("https://api.kide.app/api/products/{}", product_id);
     let result = client
