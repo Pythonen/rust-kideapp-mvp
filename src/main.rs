@@ -1,5 +1,6 @@
 use std::io::Write;
 
+use async_recursion::async_recursion;
 use reqwest::{self, header::HeaderMap, Error};
 
 use response_models::Token;
@@ -7,12 +8,13 @@ mod response_models;
 
 #[tokio::main]
 async fn main() {
-    let (email, password) = get_creds();
-    let token = get_token(email, password).await;
-    match token {
-        Ok(res) => println!("{:?}", res.access_token),
-        Err(err) => println!("{:?}", err),
-    }
+    let response = get_token().await;
+    let token = match response {
+        Ok(res) => res,
+        Err(_) => panic!("Something went wrong with getting the token :("),
+    };
+
+    println!("{:?}", token);
     // print!("Enter kide.app product url: ");
     // std::io::stdout().flush().unwrap();
     // let mut product_id = String::new();
@@ -45,7 +47,9 @@ fn get_creds() -> (String, String) {
     return (email.trim().to_string(), password.trim().to_string());
 }
 
-async fn get_token(email: String, password: String) -> Result<Token, Error> {
+#[async_recursion]
+async fn get_token() -> Result<Token, Error> {
+    let (email, password) = get_creds();
     let mut headers = HeaderMap::new();
     headers.insert(
         "User-Agent",
@@ -54,7 +58,6 @@ async fn get_token(email: String, password: String) -> Result<Token, Error> {
             .unwrap(),
     );
     let data = format!("client_id=56d9cbe22a58432b97c287eadda040df&grant_type=password&password={}&rememberMe=true&username={}", password, email);
-    println!("{:?}", data);
     let client = reqwest::Client::new();
     let result = client
         .post("https://auth.kide.app/oauth2/token")
@@ -65,5 +68,11 @@ async fn get_token(email: String, password: String) -> Result<Token, Error> {
         .unwrap()
         .json::<Token>()
         .await;
+
+    if !result.is_ok() {
+        println!("Wrong email or password");
+        get_token().await?;
+    }
+
     return result;
 }
