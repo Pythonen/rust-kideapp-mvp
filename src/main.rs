@@ -1,7 +1,7 @@
 use std::io::Write;
 
 use async_recursion::async_recursion;
-use chrono::{DateTime, Utc};
+use chrono::{naive, offset, DateTime, Duration, Local, NaiveDateTime, Utc};
 use reqwest::{self, header::HeaderMap, Error};
 
 use response_models::Token;
@@ -22,6 +22,11 @@ async fn main() {
     std::io::stdin().read_line(&mut product_id).unwrap();
     let time_to_sale = check_time(product_id).await;
     println!("{:?}", time_to_sale);
+    let now = Local::now();
+    let naive_date = NaiveDateTime::parse_from_str(&time_to_sale, "%Y-%m-%dT%H:%M:%S%z").unwrap();
+    let other_dt = DateTime::<Utc>::from_utc(naive_date, Utc);
+    let time_to_start = (other_dt - now.with_timezone(&Utc)) - Duration::hours(2);
+    println!("{:?}", time_to_start);
     // let product_response = match get_product().await {
     //     Some(res) => {
 
