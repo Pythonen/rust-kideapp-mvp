@@ -22,7 +22,7 @@ pub struct ProductInfo {
     #[serde(rename(deserialize = "minTotalReservationsPerCheckout"))]
     pub min_total_reservations_per_checkout: Option<i32>,
     #[serde(rename(deserialize = "maxTotalReservationsPerCheckout"))]
-    pub max_total_reservatoions_per_checkout: Option<i32>,
+    pub max_total_reservations_per_checkout: Option<i32>,
 }
 #[derive(Deserialize, Serialize, Debug)]
 pub struct Variant {
