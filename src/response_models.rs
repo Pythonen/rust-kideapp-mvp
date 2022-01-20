@@ -37,12 +37,10 @@ pub struct Variant {
 }
 
 #[derive(Deserialize, Serialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct TicketReserveInfo {
-    #[serde(rename(deserialize = "inventoryId"))]
     pub inventory_id: String,
-    #[serde(rename(deserialize = "productVariantUserForm"))]
     pub product_variant_user_form: Option<String>,
-    #[serde(rename(deserialize = "quantity"))]
     pub quantity: String,
 }
 

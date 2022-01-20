@@ -61,6 +61,7 @@ async fn get_and_reserve(product_id: &String, token: &String) -> String {
     let tickets = get_product(&product_id).await;
     println!("{:?}", tickets);
     if tickets.is_none() {
+        thread::sleep(Duration::milliseconds(60).to_std().unwrap());
         get_and_reserve(&product_id, &token).await;
     }
     let (min, max) = get_min_max(product_id).await;
@@ -97,7 +98,7 @@ async fn get_and_reserve(product_id: &String, token: &String) -> String {
 async fn reserve_tickets(token: &String, data: &Vec<TicketReserveInfo>) -> String {
     let client = reqwest::Client::new();
     let mut body = HashMap::new();
-    body.insert("toCreate", data);
+    body.insert("toCreate", serde_json::to_value(data).unwrap());
     let mut headers = HeaderMap::new();
     headers.insert(
         "User-Agent",
@@ -106,19 +107,19 @@ async fn reserve_tickets(token: &String, data: &Vec<TicketReserveInfo>) -> Strin
             .unwrap(),
     );
     headers.insert("Authorization", token.parse().unwrap());
-    println!("Body -> {:?}", body);
+    println!("{:?}", serde_json::to_string(&body));
     let result = client
         .post("https://api.kide.app/api/reservations/batched")
         .headers(headers)
         .json(&body)
         .send()
         .await
-        .unwrap()
-        .text()
-        .await
         .unwrap();
+    // .text()
+    // .await
+    // .unwrap();
     println!("{:?}", result);
-    return result;
+    return result.text().await.unwrap();
 }
 
 async fn check_time(product_id: &String) -> String {
@@ -133,7 +134,7 @@ async fn check_time(product_id: &String) -> String {
         .await;
     let response = match result {
         Ok(res) => res,
-        Err(_) => panic!(),
+        Err(_) => panic!("No product found :("),
     };
     return response.model.product.date_sales_from;
 }
